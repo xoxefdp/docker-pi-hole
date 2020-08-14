@@ -4,9 +4,20 @@ version: "3"
 # remember to populate a .env file, cp from example.env
 
 services:
+  openssl:
+    image: alpine-openssl:latest
+    environment:
+      CERTIFICATE_NAME: pi.hole
+      CERTIFICATE_SUBJ: ${CERTIFICATE_SUBJ}
+    volumes:
+      - ${PIHOLE_BASE}/etc-lighttpd/ssl/:/CERTS/
+      - ${PIHOLE_BASE}/etc-lighttpd/:/LIGHTTPD_CONF/
+
   pihole:
     container_name: pihole
     image: pihole/pihole:latest
+    depends_on:
+      - openssl
     # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
     dns:
       - ${LOCAL_DNS}
@@ -28,6 +39,7 @@ services:
     volumes:
       - ${PIHOLE_BASE}/etc-pihole/:/etc/pihole/
       - ${PIHOLE_BASE}/etc-dnsmasq.d/:/etc/dnsmasq.d/
+      - ${PIHOLE_BASE}/etc-lighttpd/:/etc/lighttpd/
       # run `touch ./var-log/pihole.log` first unless you like errors
       # - './var-log/pihole.log:/var/log/pihole.log'
     # Recommended but not required (DHCP needs NET_ADMIN)
